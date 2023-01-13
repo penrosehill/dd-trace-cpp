@@ -30,6 +30,7 @@ services:
       - BENCH_OUTPUT=/var/log/bench/test/tracer.nanoseconds
       - DD_AGENT_HOST=agent-test
       - UPSTREAM=upstream-test
+      - DD_TRACE_ID_128_BIT_ENABLED=true
     volumes:
       - './output:/var/log/bench'
       - './tracer/init:/usr/local/bin/init:ro'
@@ -68,6 +69,7 @@ services:
       - BENCH_OUTPUT=/var/log/bench/control/tracer.nanoseconds
       - DD_AGENT_HOST=agent-control
       - UPSTREAM=upstream-control
+      - DD_TRACE_ID_128_BIT_ENABLED=false
     volumes:
       - './output:/var/log/bench'
       - './tracer/init:/usr/local/bin/init:ro'

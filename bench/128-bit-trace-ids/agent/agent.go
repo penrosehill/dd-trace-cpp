@@ -6,14 +6,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 )
 
 var outputFile *os.File
 var output *bufio.Writer
 
 func content(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("I received a request.") // TODO: no
 	contentLength := "0"
 
 	lengths := req.Header["Content-Length"]
@@ -28,7 +26,6 @@ func content(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(fmt.Sprintf("Unable to write to output: %v", err))
 	}
-	fmt.Println("I wrote", contentLength, "to output file.")
 
 	w.Write([]byte("{}"))
 }
@@ -46,14 +43,16 @@ func main() {
 	}
 	output = bufio.NewWriter(outputFile)
 	defer func() {
+		fmt.Println("Deferred flush and close commencing...")
 		output.Flush()
 		outputFile.Close()
 	}()
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT)
+	signal.Notify(signals)
 	go func() {
 		<-signals
+		fmt.Println("I received a signal.")
 		output.Flush()
 		outputFile.Close()
 		os.Exit(0)

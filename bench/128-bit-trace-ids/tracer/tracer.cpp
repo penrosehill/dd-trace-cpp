@@ -23,11 +23,13 @@ int main() {
     }
 
     dd::Tracer tracer{*finalized};
-    for (int i = 0; i < 100; ++i) {
-        tracer.create_span();
+    for (int i = 0; i < 3; ++i) {
+        std::cout << "Creating trace " << i << std::endl;
+        {
+            tracer.create_span();
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
-
-    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     client->drain(std::chrono::steady_clock::now() + std::chrono::seconds(3));
 }
