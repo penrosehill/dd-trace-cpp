@@ -1,0 +1,72 @@
+version: "3.2"
+services:
+
+  # Services in Test Group
+  # ----------------------
+  # TODO: describe
+
+  # TODO: describe
+  agent-test:
+    build:
+      context: ./agent
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/agent-test.bytes
+    volumes:
+      - './output:/var/log/bench'
+
+  # TODO: describe
+  upstream-test:
+    build:
+      context: ./upstream
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/upstream-test.bytes
+    volumes:
+      - './output:/var/log/bench'
+
+  # TODO: describe
+  tracer-test:
+    image: ubuntu:22.04
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/tracer-test.nanoseconds
+      - DD_AGENT_HOST=agent-test
+      - UPSTREAM=upstream-test
+    volumes:
+      - './output:/var/log/bench'
+      - './tracer/init:/usr/local/bin/init:ro'
+      - '../../.build:/opt/build:ro'
+    command: /usr/local/bin/init
+
+  # Services in Control Group
+  # -------------------------
+  # TODO: describe
+
+  # TODO: describe
+  agent-control:
+    build:
+      context: ./agent
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/agent-control.bytes
+    volumes:
+      - './output:/var/log/bench'
+
+  # TODO: describe
+  upstream-control:
+    build:
+      context: ./upstream
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/upstream-control.bytes
+    volumes:
+      - './output:/var/log/bench'
+
+  # TODO: describe
+  tracer-control:
+    image: ubuntu:22.04
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/tracer-control.nanoseconds
+      - DD_AGENT_HOST=agent-control
+      - UPSTREAM=upstream-control
+    volumes:
+      - './output:/var/log/bench'
+      - './tracer/init:/usr/local/bin/init:ro'
+      - '../../.build:/opt/build:ro'
+    command: /usr/local/bin/init

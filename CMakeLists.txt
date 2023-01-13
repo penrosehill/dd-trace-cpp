@@ -68,7 +68,7 @@ if(BUILD_COVERAGE)
   set(COVERAGE_LIBRARIES gcov)
 endif()
 
-add_library(dd_trace_cpp SHARED)
+add_library(dd_trace_cpp STATIC)
 target_sources(dd_trace_cpp PRIVATE
     src/datadog/cerr_logger.cpp
     src/datadog/clock.cpp
@@ -205,4 +205,8 @@ endif()
 
 if(BUILD_EXAMPLE)
   add_subdirectory(example)
+endif()
+
+if(BUILD_BENCHMARKS)
+  add_subdirectory(bench)
 endif()
