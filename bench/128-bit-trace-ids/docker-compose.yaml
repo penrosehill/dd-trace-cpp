@@ -10,7 +10,7 @@ services:
     build:
       context: ./agent
     environment:
-      - BENCH_OUTPUT=/var/log/bench/agent-test.bytes
+      - BENCH_OUTPUT=/var/log/bench/test/agent.bytes
     volumes:
       - './output:/var/log/bench'
 
@@ -19,7 +19,7 @@ services:
     build:
       context: ./upstream
     environment:
-      - BENCH_OUTPUT=/var/log/bench/upstream-test.bytes
+      - BENCH_OUTPUT=/var/log/bench/test/upstream.bytes
     volumes:
       - './output:/var/log/bench'
 
@@ -27,7 +27,7 @@ services:
   tracer-test:
     image: ubuntu:22.04
     environment:
-      - BENCH_OUTPUT=/var/log/bench/tracer-test.nanoseconds
+      - BENCH_OUTPUT=/var/log/bench/test/tracer.nanoseconds
       - DD_AGENT_HOST=agent-test
       - UPSTREAM=upstream-test
     volumes:
@@ -35,6 +35,9 @@ services:
       - './tracer/init:/usr/local/bin/init:ro'
       - '../../.build:/opt/build:ro'
     command: /usr/local/bin/init
+    depends_on:
+      - 'agent-test'
+      - 'upstream-test'
 
   # Services in Control Group
   # -------------------------
@@ -45,7 +48,7 @@ services:
     build:
       context: ./agent
     environment:
-      - BENCH_OUTPUT=/var/log/bench/agent-control.bytes
+      - BENCH_OUTPUT=/var/log/bench/control/agent.bytes
     volumes:
       - './output:/var/log/bench'
 
@@ -54,7 +57,7 @@ services:
     build:
       context: ./upstream
     environment:
-      - BENCH_OUTPUT=/var/log/bench/upstream-control.bytes
+      - BENCH_OUTPUT=/var/log/bench/control/upstream.bytes
     volumes:
       - './output:/var/log/bench'
 
@@ -62,7 +65,7 @@ services:
   tracer-control:
     image: ubuntu:22.04
     environment:
-      - BENCH_OUTPUT=/var/log/bench/tracer-control.nanoseconds
+      - BENCH_OUTPUT=/var/log/bench/control/tracer.nanoseconds
       - DD_AGENT_HOST=agent-control
       - UPSTREAM=upstream-control
     volumes:
@@ -70,3 +73,6 @@ services:
       - './tracer/init:/usr/local/bin/init:ro'
       - '../../.build:/opt/build:ro'
     command: /usr/local/bin/init
+    depends_on:
+      - 'agent-control'
+      - 'upstream-control'

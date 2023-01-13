@@ -12,7 +12,8 @@ import (
 var outputFile *os.File
 var output *bufio.Writer
 
-func headers(w http.ResponseWriter, req *http.Request) {
+func content(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("I received a request.") // TODO: no
 	contentLength := "0"
 
 	lengths := req.Header["Content-Length"]
@@ -23,7 +24,12 @@ func headers(w http.ResponseWriter, req *http.Request) {
 		contentLength = lengths[0]
 	}
 
-	fmt.Fprintln(output, contentLength)
+	_, err := fmt.Fprintln(output, contentLength)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to write to output: %v", err))
+	}
+	fmt.Println("I wrote", contentLength, "to output file.")
+
 	w.Write([]byte("{}"))
 }
 
@@ -32,12 +38,17 @@ func main() {
 	if !ok {
 		panic("Missing BENCH_OUTPUT environment variable")
 	}
+	fmt.Println("Going to create/append file:", path)
+
 	outputFile, err := os.Create(path)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to create/append %v because %v", path, err))
 	}
-	defer outputFile.Close()
 	output = bufio.NewWriter(outputFile)
+	defer func() {
+		output.Flush()
+		outputFile.Close()
+	}()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT)
@@ -48,6 +59,6 @@ func main() {
 		os.Exit(0)
 	}()
 
-	http.HandleFunc("/", headers)
+	http.HandleFunc("/", content)
 	http.ListenAndServe(":8126", nil)
 }
