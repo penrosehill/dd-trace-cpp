@@ -27,6 +27,7 @@ services:
   tracer-test:
     image: ubuntu:22.04
     environment:
+      - BENCH_TRACING=true
       - BENCH_OUTPUT=/var/log/bench/test/tracer.nanoseconds
       - DD_AGENT_HOST=agent-test
       - UPSTREAM=upstream-test
@@ -66,6 +67,7 @@ services:
   tracer-control:
     image: ubuntu:22.04
     environment:
+      - BENCH_TRACING=true
       - BENCH_OUTPUT=/var/log/bench/control/tracer.nanoseconds
       - DD_AGENT_HOST=agent-control
       - UPSTREAM=upstream-control
@@ -78,3 +80,31 @@ services:
     depends_on:
       - 'agent-control'
       - 'upstream-control'
+
+  # Services in Baseline Group
+  # --------------------------
+  # TODO: describe
+
+  # TODO: describe
+  upstream-baseline:
+    build:
+      context: ./upstream
+    environment:
+      - BENCH_OUTPUT=/var/log/bench/baseline/upstream.bytes
+    volumes:
+      - './output:/var/log/bench'
+
+  # TODO: describe
+  tracer-baseline:
+    image: ubuntu:22.04
+    environment:
+      - BENCH_TRACING=false
+      - BENCH_OUTPUT=/var/log/bench/baseline/tracer.nanoseconds
+      - UPSTREAM=upstream-baseline
+    volumes:
+      - './output:/var/log/bench'
+      - './tracer/init:/usr/local/bin/init:ro'
+      - '../../.build:/opt/build:ro'
+    command: /usr/local/bin/init
+    depends_on:
+      - 'upstream-baseline'

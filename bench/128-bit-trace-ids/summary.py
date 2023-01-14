@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import argparse
+import statistics
+
+
+def parse_options():
+    parser = argparse.ArgumentParser(
+                    prog = 'summary',
+                    description = 'Print statistics summary for files')
+
+    parser.add_argument('--cutoff', type=int)
+
+    parser.add_argument('file', nargs='+')
+
+    return parser.parse_args()
+
+
+options = parse_options()
+
+for path in options.file:
+    values = []
+    with open(path) as file:
+        for line in file:
+            line = line.strip()
+            if len(line) == 0 or line[0] == '#':
+                continue
+            value = int(line)
+            if options.cutoff is not None and value > options.cutoff:
+                continue
+            values.append(value)
+
+    print(path)
+    for stat in 'mean median mode pstdev stdev'.split():
+        print(f'\t{stat}:', getattr(statistics, stat)(values))
+
+    print('\tmin:', min(values))
+    print('\tmax:', max(values))
+

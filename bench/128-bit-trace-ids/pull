@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+for name in test control baseline; do
+  cp output/$name/tracer.nanoseconds $name.ns
+done
+
+echo 'Possible commands:'
+echo ''
+echo 'python3 histogram.py --xdivisor 1000000 test.ns control.ns baseline.ns'
+echo 'python3 histogram.py --xdivisor 1000000 --cutoff 3000000 --bins 500 test.ns control.ns baseline.ns'
+

@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <mutex>
+#include <string_view>
 #include <thread>
 
 class Semaphore {
@@ -47,10 +48,10 @@ extern "C" void on_signal(int signal) {
   std::signal(signal, SIG_IGN);
 }
 
-int main() {
-  std::signal(SIGTERM, on_signal);
-  std::signal(SIGINT, on_signal);
+const auto pause_duration = std::chrono::milliseconds(10);
+const int requests_per_trace = 1;
 
+int with_tracing() {
   namespace dd = datadog::tracing;
   dd::TracerConfig config;
   config.defaults.service = "benchsvc";
@@ -73,8 +74,6 @@ int main() {
   upstream.authority = std::getenv("UPSTREAM");
   upstream.path = "/";
 
-  const auto pause = std::chrono::milliseconds(10);
-  const int requests_per_trace = 3;
   Semaphore sync{1};
 
   while (!shutting_down) {
@@ -96,7 +95,6 @@ int main() {
       }
       sync.wait();
       sync.reset(1);
-      std::this_thread::sleep_for(pause);
     }
 
     if (!skip) {
@@ -106,5 +104,68 @@ int main() {
                        .count()
                 << '\n';
     }
+
+    std::this_thread::sleep_for(pause_duration);
+  }
+
+  return 0;
+}
+
+int without_tracing() {
+  namespace dd = datadog::tracing;
+  const auto logger = std::make_shared<dd::CerrLogger>();
+  const auto client = std::make_shared<dd::Curl>(logger);
+  dd::HTTPClient::URL upstream;
+  upstream.scheme = "http";
+  upstream.authority = std::getenv("UPSTREAM");
+  upstream.path = "/";
+
+  Semaphore sync{1};
+
+  while (!shutting_down) {
+    bool skip = false;
+    const auto before = std::chrono::steady_clock::now();
+    for (int i = 0; i < requests_per_trace; ++i) {
+      const auto result = client->post(
+          upstream, [&](dd::DictWriter&) {}, "dummy body",
+          [&](int, const dd::DictReader&, std::string) { sync.decrement(); },
+          [&](dd::Error) {
+            sync.decrement();
+            skip = true;
+          });
+      if (!result) {
+        sync.decrement();
+      }
+      sync.wait();
+      sync.reset(1);
+    }
+
+    if (!skip) {
+      const auto after = std::chrono::steady_clock::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(after -
+                                                                        before)
+                       .count()
+                << '\n';
+    }
+
+    std::this_thread::sleep_for(pause_duration);
+  }
+
+  return 0;
+}
+
+int main() {
+  std::signal(SIGTERM, on_signal);
+  std::signal(SIGINT, on_signal);
+
+  const auto env = std::getenv("BENCH_TRACING");
+  if (!env) {
+    std::cerr << "Missing BENCH_TRACING environment variable.\n";
+    return 1;
+  }
+  if (env == std::string_view{"true"}) {
+    return with_tracing();
+  } else {
+    return without_tracing();
   }
 }
