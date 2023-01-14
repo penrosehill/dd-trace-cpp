@@ -32,8 +32,8 @@ for path in options.file:
 
     print(path)
     for stat in 'mean median mode pstdev stdev'.split():
-        print(f'\t{stat}:', getattr(statistics, stat)(values))
+        print(f'\t{stat}\t', getattr(statistics, stat)(values))
 
-    print('\tmin:', min(values))
-    print('\tmax:', max(values))
+    print('\tmin\t', min(values))
+    print('\tmax\t', max(values))
 
