@@ -57,7 +57,7 @@ for path in options.file:
 
     with open(work_dir/path.name, 'w') as file:
         for i, bucket in enumerate(bins):
-            x = min_value + i * (max_value - min_value)
+            x = min_value + i * (max_value - min_value) / len(bins)
             y = bucket
             print(x, y, file=file)
 

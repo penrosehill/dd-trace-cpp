@@ -73,10 +73,12 @@ int main() {
   upstream.authority = std::getenv("UPSTREAM");
   upstream.path = "/";
 
+  const auto pause = std::chrono::milliseconds(10);
   const int requests_per_trace = 3;
   Semaphore sync{1};
 
   while (!shutting_down) {
+    bool skip = false;
     const auto before = std::chrono::steady_clock::now();
     const auto root = tracer.create_span();
     for (int i = 0; i < requests_per_trace; ++i) {
@@ -85,18 +87,24 @@ int main() {
           upstream, [&](dd::DictWriter& writer) { child.inject(writer); },
           "dummy body",
           [&](int, const dd::DictReader&, std::string) { sync.decrement(); },
-          [&](dd::Error) { sync.decrement(); });
+          [&](dd::Error) {
+            sync.decrement();
+            skip = true;
+          });
       if (!result) {
         sync.decrement();
       }
       sync.wait();
       sync.reset(1);
+      std::this_thread::sleep_for(pause);
     }
 
-    const auto after = std::chrono::steady_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(after -
-                                                                      before)
-                     .count()
-              << '\n';
+    if (!skip) {
+      const auto after = std::chrono::steady_clock::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(after -
+                                                                        before)
+                       .count()
+                << '\n';
+    }
   }
 }
