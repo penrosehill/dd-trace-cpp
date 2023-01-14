@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import math
 import statistics
 
 
@@ -36,4 +37,6 @@ for path in options.file:
 
     print('\tmin\t', min(values))
     print('\tmax\t', max(values))
+    print('\tcount\t', len(values))
+    print('\t√c̅o̅u̅n̅t̅\t', math.sqrt(len(values)))
 
