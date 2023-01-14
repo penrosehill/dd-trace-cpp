@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 	"syscall"
 )
 
 var outputFile *os.File
 var output *bufio.Writer
+var wroteWhen time.Time
 
 func headers(w http.ResponseWriter, req *http.Request) {
 	var size int
@@ -20,7 +22,11 @@ func headers(w http.ResponseWriter, req *http.Request) {
 			size += len(h)
 		}
 	}
-	fmt.Fprintln(output, size)
+	now := time.Now()
+	if now.Sub(wroteWhen).Seconds() >= 1 {
+		fmt.Fprintln(output, size)
+		wroteWhen = now
+	}
 	_, err := w.Write([]byte{})
 	if err != nil {
 		fmt.Println("error:", err)
@@ -40,7 +46,7 @@ func main() {
 	output = bufio.NewWriter(outputFile)
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-signals
 		output.Flush()

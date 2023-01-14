@@ -8,5 +8,5 @@ fi
 /opt/build/bench/128-bit-trace-ids/tracer/tracer >"$BENCH_OUTPUT" &
 tracer_pid=$?
 
-trap 'kill "$tracer_pid"' INT
+trap 'kill "$tracer_pid"' INT TERM
 wait
