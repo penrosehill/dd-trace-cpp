@@ -23,7 +23,7 @@ class Semaphore {
   void reset(int new_count) {
     std::lock_guard<std::mutex> lock{mutex};
     count = new_count;
-    if (count == 0) {
+    if (count <= 0) {
       zeroed.notify_all();
     }
   }
@@ -31,7 +31,7 @@ class Semaphore {
   void decrement() {
     std::lock_guard<std::mutex> lock{mutex};
     --count;
-    if (count == 0) {
+    if (count <= 0) {
       zeroed.notify_all();
     }
   }
@@ -92,6 +92,7 @@ int with_tracing() {
           });
       if (!result) {
         sync.decrement();
+        skip = true;
       }
       sync.wait();
       sync.reset(1);
@@ -135,6 +136,7 @@ int without_tracing() {
           });
       if (!result) {
         sync.decrement();
+        skip = true;
       }
       sync.wait();
       sync.reset(1);
